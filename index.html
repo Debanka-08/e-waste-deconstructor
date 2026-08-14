@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="An interactive e-waste awareness and material deconstruction field guide."
+    />
+    <title>E-Waste Deconstructor & Awareness Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <div id="entry-view" class="entry-page">
+      <section class="entry-visual">
+        <div class="entry-kicker">Field guide / 01</div>
+        <div class="entry-title">
+          Open it.<br /><em>Understand</em><br />what’s inside.
+        </div>
+        <div class="entry-note">
+          A hands-on learning companion for curious Class 11 minds — and anyone
+          who has ever wondered where a device goes after the screen goes dark.
+        </div>
+      </section>
+
+      <section class="entry-form-wrap">
+        <form id="entry-form" class="entry-form">
+          <div class="brand-mark" aria-hidden="true">↻</div>
+          <div class="eyebrow form-eyebrow">Welcome to the deconstructor</div>
+          <h2>Leave your trail.</h2>
+          <p class="lead">
+            Your visit helps us understand who is exploring e-waste. Nothing
+            more, nothing hidden.
+          </p>
+          <div class="form-stack">
+            <div>
+              <label class="field-label" for="visitor-name">Your name</label>
+              <input
+                id="visitor-name"
+                class="field"
+                placeholder="e.g. Ayush Kumar"
+                autocomplete="name"
+                required
+              />
+            </div>
+            <div>
+              <label class="field-label" for="visitor-email">Email address</label>
+              <input
+                id="visitor-email"
+                class="field"
+                placeholder="you@example.com"
+                type="email"
+                autocomplete="email"
+                required
+              />
+            </div>
+            <div id="entry-error" class="error-text" hidden></div>
+            <button class="button primary" type="submit">
+              Enter the field guide <span aria-hidden="true">→</span>
+            </button>
+          </div>
+          <div class="form-footer">
+            <span class="tiny-mark" aria-hidden="true">✓</span>
+            <span>Stored only in this browser · no account required</span>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div id="app-view" class="app-shell" hidden>
+      <aside class="sidebar">
+        <a href="#knowledge" class="brand" data-route="knowledge">
+          <div class="brand-mark" aria-hidden="true">↻</div>
+          <div>
+            <div class="brand-name">deconstructor</div>
+            <div class="brand-sub">field guide</div>
+          </div>
+        </a>
+        <nav id="main-navigation" class="nav-list" aria-label="Main navigation">
+          <a href="#knowledge" class="nav-link" data-route="knowledge">
+            <span aria-hidden="true">▦</span><span>Knowledge</span>
+          </a>
+          <a href="#deconstructor" class="nav-link" data-route="deconstructor">
+            <span aria-hidden="true">↻</span><span>Deconstructor</span>
+          </a>
+          <a href="#visitors" class="nav-link" data-route="visitors">
+            <span aria-hidden="true">♙</span><span>Visitors</span>
+          </a>
+          <a href="#links" class="nav-link" data-route="links">
+            <span aria-hidden="true">◎</span><span>Useful links</span>
+          </a>
+          <a href="#books" class="nav-link" data-route="books">
+            <span aria-hidden="true">▤</span><span>Books</span>
+          </a>
+          <a href="#movies" class="nav-link" data-route="movies">
+            <span aria-hidden="true">▶</span><span>Watch</span>
+          </a>
+        </nav>
+        <div class="sidebar-foot">
+          <div class="visitor-mini">
+            <div id="sidebar-avatar" class="avatar"></div>
+            <div>
+              <strong id="sidebar-name"></strong>
+              <span>Explorer profile</span>
+            </div>
+            <button id="sidebar-sign-out" class="icon-button quiet" type="button" aria-label="Sign out">×</button>
+          </div>
+        </div>
+      </aside>
+
+      <div class="main-column">
+        <header class="topbar">
+          <div id="breadcrumb" class="crumb">E-WASTE / KNOWLEDGE</div>
+          <div class="top-actions">
+            <button id="theme-toggle" class="icon-button" type="button" title="Toggle dark mode">☾</button>
+            <button id="sign-out" class="button ghost" type="button">Sign out</button>
+          </div>
+        </header>
+        <main id="page-content"></main>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
