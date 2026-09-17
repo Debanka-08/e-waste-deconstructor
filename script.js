@@ -175,18 +175,41 @@ function showError(message) {
   error.hidden = false;
 }
 
-function enterGuide(event) {
+async function enterGuide(event) {
   event.preventDefault();
+
   const name = $("#visitor-name").value.trim();
   const email = $("#visitor-email").value.trim();
+
   if (!name) return showError("Tell us your name first.");
-  if (!email.includes("@")) return showError("Please enter an email with an @ symbol.");
-  const visitor = { name, email, visitedAt: new Date().toISOString() };
-  const visitors = readStorage("ewaste-visitors", []);
-  writeStorage("ewaste-profile", { name, email });
-  writeStorage("ewaste-visitors", [visitor, ...visitors.filter((entry) => entry.email !== email)]);
-  renderShell();
-  location.hash = "knowledge";
+  if (!email.includes("@")) {
+    return showError("Please enter an email with an @ symbol.");
+  }
+
+  try {
+    const response = await fetch("https://e-waste-deconstructor.site.je/save_visitor.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ name, email })
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      return showError(result.message || "Could not save your visit.");
+    }
+
+    writeStorage("ewaste-profile", { name, email });
+
+    renderShell();
+    location.hash = "knowledge";
+
+  } catch (error) {
+    console.error(error);
+    showError("Could not connect to the visitor database.");
+  }
 }
 
 function signOut() {
@@ -298,14 +321,73 @@ function renderItemDetail() {
 }
 
 function visitorsPage() {
-  const visitors = readStorage("ewaste-visitors", []);
-  return `<div class="page"><div class="eyebrow">The people who looked closer</div><h2>Visitor log.</h2><div class="visitor-toolbar"><p class="muted">${visitors.length} explorer${visitors.length === 1 ? "" : "s"} have opened the guide.</p><div class="search-wrap"><span>⌕</span><input id="visitor-search" class="field" placeholder="Search names or emails..." /></div></div><div id="visitor-table" class="visitor-table card"></div></div>`;
+ const visitors = [];
+  return `<div class="page"><div class="eyebrow">The people who looked closer</div><h2>Visitor log.</h2><div class="visitor-toolbar"><p class="muted">Loading visitor count...</p><div class="search-wrap"><span>⌕</span><input id="visitor-search" class="field" placeholder="Search names or emails..." /></div></div><div id="visitor-table" class="visitor-table card"></div></div>`;
 }
 
-function renderVisitors(query = "") {
-  const visitors = readStorage("ewaste-visitors", []);
-  const filtered = visitors.filter((visitor) => `${visitor.name} ${visitor.email}`.toLowerCase().includes(query.toLowerCase()));
-  $("#visitor-table").innerHTML = filtered.length ? `<table><thead><tr><th>Explorer</th><th>Email</th><th>Visited</th></tr></thead><tbody>${filtered.map((visitor) => `<tr><td><div class="visitor-person"><div class="avatar">${visitor.name.charAt(0).toUpperCase()}</div>${visitor.name}</div></td><td class="muted">${visitor.email}</td><td class="muted">${new Date(visitor.visitedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</td></tr>`).join("")}</tbody></table>` : `<div class="empty-state"><div class="empty-icon">♙</div><h3>${visitors.length ? "No matching explorers" : "The log is quiet"}</h3><p>${visitors.length ? "Try another name or email." : "When someone enters the field guide, their visit will appear here on this device."}</p></div>`;
+async function renderVisitors(query = "") {
+  try {
+    const response = await fetch("https://e-waste-deconstructor.site.je/get_visitors.php");
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.message || "Could not load visitors.");
+    }
+
+    const visitors = result.visitors;
+
+    const filtered = visitors.filter((visitor) =>
+      `${visitor.name} ${visitor.email}`
+        .toLowerCase()
+        .includes(query.toLowerCase())
+    );
+
+    $("#visitor-table").innerHTML = filtered.length
+      ? `<table>
+          <thead>
+            <tr>
+              <th>Explorer</th>
+              <th>Email</th>
+              <th>Visited</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filtered.map((visitor) => `
+              <tr>
+                <td>
+                  <div class="visitor-person">
+                    <div class="avatar">${visitor.name.charAt(0).toUpperCase()}</div>
+                    ${visitor.name}
+                  </div>
+                </td>
+                <td class="muted">${visitor.email}</td>
+                <td class="muted">
+                  ${new Date(visitor.created_at).toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric"
+                  })}
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>`
+      : `<div class="empty-state">
+          <div class="empty-icon">♙</div>
+          <h3>${visitors.length ? "No matching explorers" : "The log is quiet"}</h3>
+          <p>${visitors.length ? "Try another name or email." : "When someone enters the field guide, their visit will appear here."}</p>
+        </div>`;
+
+  } catch (error) {
+    console.error(error);
+
+    $("#visitor-table").innerHTML = `
+      <div class="empty-state">
+        <h3>Could not load visitors</h3>
+        <p>Please check the database connection.</p>
+      </div>
+    `;
+  }
 }
 
 function linksPage() {
@@ -378,9 +460,30 @@ function bindRouteEvents(route) {
     $("#item-search").addEventListener("input", (event) => renderItemList(event.target.value));
   }
   if (route === "visitors") {
-    renderVisitors();
-    $("#visitor-search").addEventListener("input", (event) => renderVisitors(event.target.value));
-  }
+  renderVisitors();
+
+  fetch("get_visitors.php")
+    .then((response) => response.json())
+    .then((result) => {
+      if (!result.success) return;
+
+      const countText = $("#visitor-table")
+        .closest(".page")
+        .querySelector(".visitor-toolbar p");
+
+      const count = result.visitors.length;
+
+      countText.textContent =
+        `${count} explorer${count === 1 ? "" : "s"} have opened the guide.`;
+    })
+    .catch((error) => {
+      console.error("Could not load visitor count:", error);
+    });
+
+  $("#visitor-search").addEventListener("input", (event) =>
+    renderVisitors(event.target.value)
+  );
+}
 }
 
 $("#entry-form").addEventListener("submit", enterGuide);
